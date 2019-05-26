@@ -1,0 +1,20 @@
+{
+    "name": "codeigniterext/queue",
+    "description": "Queue Job module for CodeIgniter 4",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Arash Saffari",
+            "email": "arash@saffari.com"
+        }
+    ],
+    "require": {
+        "symfony/event-dispatcher": "~2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "CodeigniterExt\\Queue\\": "src"
+        }
+    }
+
+}
