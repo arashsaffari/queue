@@ -119,63 +119,70 @@ class Pdo implements PersistorInterface
      */
     public function getTask($priority = null)
     {
-        $this->_getPdo()->exec('SET @ID = 0;');
+        try {
+            
+            $this->_getPdo()->exec('SET @ID = 0;');
 
-        // UPDATE
-        //     jobs
-        // SET
-        //     id          = @ID := id,
-        //     is_taken    = 1
-        // WHERE
-        //     is_taken    = 0
-        //     AND priority = 1
-        // ORDER BY
-        //     created_at ASC
-        // LIMIT 1
-        
-        // Update first task that is not taken as taken, taking its ID
-        $statement = $this->_getPdo()->prepare(sprintf('
-            UPDATE
-                %s
-            SET
-                id          = @ID := id,
-                is_taken    = 1
-            WHERE
-                is_taken    = 0
-                %s
-            ORDER BY
-                created_at ASC
-            LIMIT 1
-        ', $this->_options['table_name'], $priority !== null ? 'AND priority = :priority' : ''));
-        $array = null;
-        
-        if ($priority !== null) {
-            $array = array(':priority' => $priority);
+            // UPDATE
+            //     jobs
+            // SET
+            //     id          = @ID := id,
+            //     is_taken    = 1
+            // WHERE
+            //     is_taken    = 0
+            //     AND priority = 1
+            // ORDER BY
+            //     created_at ASC
+            // LIMIT 1
+            
+            // Update first task that is not taken as taken, taking its ID
+            $statement = $this->_getPdo()->prepare(sprintf('
+                UPDATE
+                    %s
+                SET
+                    id          = @ID := id,
+                    is_taken    = 1
+                WHERE
+                    is_taken    = 0
+                    %s
+                ORDER BY
+                    created_at ASC
+                LIMIT 1
+            ', $this->_options['table_name'], $priority !== null ? 'AND priority = :priority' : ''));
+            $array = null;
+            
+            if ($priority !== null) {
+                $array = array(':priority' => $priority);
+            }
+
+            $statement->execute($array);
+
+            if ($statement->rowCount() === 0) {
+                // No tasks
+                return null;
+            }
+
+            // Now, get that task
+            $statement  = $this->_getPdo()->prepare(sprintf('SELECT * FROM %s WHERE id = @ID', $this->_options['table_name']));
+            $statement->execute();
+            $taskData   = $statement->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$taskData) {
+                return null;
+            }
+            
+            $taskID =  $this->_getPdo()->query("SELECT @ID")->fetchColumn();
+
+            $fetchedTask = unserialize($taskData['data']);
+
+            $fetchedTask->id = $taskID;
+
+            return $fetchedTask;
+            
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
         }
-
-        $statement->execute($array);
-
-        if ($statement->rowCount() === 0) {
-            // No tasks
-            return null;
-        }
-
-        // Now, get that task
-        $statement  = $this->_getPdo()->prepare(sprintf('SELECT * FROM %s WHERE id = @ID', $this->_options['table_name']));
-        $statement->execute();
-        $taskData   = $statement->fetch(\PDO::FETCH_ASSOC);
-
-        if (!$taskData) {
-            return null;
-        }
         
-        $taskID =  $this->_getPdo()->query("SELECT @ID")->fetchColumn();
-
-        $fetchedTask = unserialize($taskData['data']);
-
-        $fetchedTask->id = $taskID;
-
-        return $fetchedTask;
     }
 
     /**
@@ -187,17 +194,24 @@ class Pdo implements PersistorInterface
     public function setError(Task $task)
     {
 
-        $this->_getPdo()->exec(
-            sprintf('
-                UPDATE
-                    %s
-                SET
-                    error = 1
-                WHERE
-                    id = %s
-        ', $this->_options['table_name'], $task->id));
-            
-        return true;
+        try {
+
+            $this->_getPdo()->exec(
+                sprintf('
+                    UPDATE
+                        %s
+                    SET
+                        error = 1
+                    WHERE
+                        id = %s
+            ', $this->_options['table_name'], $task->id));
+                
+            return true;
+
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+        
     }
 
     /**
@@ -240,13 +254,17 @@ class Pdo implements PersistorInterface
      */
     public function deleteTask(Task $task)
     {
-        $this->_getPdo()->exec(sprintf('
-        DELETE FROM %s
-            WHERE 
-                id = %s
-                AND is_taken = 1
-                AND error IS NULL
-        ', $this->_options['table_name'], $task->id));
+        try {
+            $this->_getPdo()->exec(sprintf('
+                DELETE FROM %s
+                    WHERE 
+                        id = %s
+                        AND is_taken = 1
+                        AND error IS NULL
+                ', $this->_options['table_name'], $task->id));
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
     }
 
     /**
@@ -282,7 +300,11 @@ class Pdo implements PersistorInterface
                 $options = $this->_options['options'] + $options;
             }
 
-            $this->_pdo = new \PDO($dsn, $username, $password, $options);
+            try {
+                $this->_pdo = new \PDO($dsn, $username, $password, $options);
+            } catch (\Exception $ex) {
+                $this->_handelMysqliSqlException($ex);
+            }
         } else {
             $this->_testConnection($this->_pdo);
         }
@@ -295,25 +317,32 @@ class Pdo implements PersistorInterface
      *
      * @param \PDO $pdo
      *
-     * @throws \Qutee\Persistor\PDOException
+     * @throws \CodeigniterExt\Queue\Persistor\Pdo\DBConnecException
      */
     protected function _testConnection(\PDO $pdo)
     {
         try {
             // Dummy query
             $pdo->query('SELECT 1');
-        } catch (\PDOException $e) {
+
+        } catch (\PDOException $ex) {
             // Mysql server has gone away or similar error
             self::$_reconnects--;
 
             if (self::$_reconnects <= 0) {
                 // No more tests, throw error, reinstate reconnects
                 self::$_reconnects = 3;
-                throw $e;
+                
+                $this->_pdo = null;
+
+                $this->_handelMysqliSqlException($ex);
             }
 
-            $pdo = null;
-            $this->_getPdo();
+            // $pdo = null;
+
+            // usleep(4 * 1000000);
+            
+            // $this->_getPdo();
         }
     }
 
@@ -330,5 +359,14 @@ class Pdo implements PersistorInterface
         $stmt->execute(array($uniqueId));
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return !empty($rows);
+    }
+
+    protected function _handelMysqliSqlException($ex)
+    {
+        throw new \CodeigniterExt\Queue\DBConnectionException(
+            $ex->getMessage(),
+            (int)$ex->getCode(),
+            $ex->getPrevious()
+        );
     }
 }
