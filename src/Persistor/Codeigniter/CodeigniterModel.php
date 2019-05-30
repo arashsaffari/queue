@@ -59,6 +59,8 @@ class CodeigniterModel extends Model
 		}
 		$this->table		= $options['table_name'];
         $this->returnType	= $options['entity'];
+
+        $this->db = \Config\Database::connect();
         
         parent::__construct();
     }
