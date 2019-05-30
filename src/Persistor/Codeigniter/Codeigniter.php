@@ -15,6 +15,7 @@ use CodeigniterExt\Queue\Persistor\PersistorInterface;
 
 class Codeigniter implements PersistorInterface
 {
+    private $_options;
     
     /**
      *
@@ -25,15 +26,41 @@ class Codeigniter implements PersistorInterface
 
     /**
      * 
-     * @param \PDO $pdo
+     * @param Array $options
      */
     public function __construct(array $options)
     {
 
 		$this->config = \CodeigniterExt\Queue\Controllers\Queue::getConfig();
-		
-		$this->setOptions($options);
+        
+        $this->_options = $options;
+        $this->setOptions($options);
     }
+
+
+    /**
+     * Test connection, reconnect if needed
+     *
+     *
+     * @throws \CodeigniterExt\Queue\Persistor\Codeigniter\DBConnecException
+     */
+    protected function _testConnection()
+    {
+        try {
+            
+            // $builder = $this->_QueueJobs->builder();
+            // $query = $builder->query('SELECT 1');
+            // $query->getResult();
+
+            $db = \Config\Database::connect();
+            $db->reconnect();
+        }
+        catch (\mysqli_sql_exception $ex) {
+            
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+
 
     /**
      *
@@ -49,8 +76,9 @@ class Codeigniter implements PersistorInterface
      */
     public function setOptions(array $options)
     {
-
         $this->_QueueJobs = new CodeigniterModel($options);
+
+        $this->_testConnection();
 
         return $this;
     }
@@ -92,11 +120,16 @@ class Codeigniter implements PersistorInterface
      */
     public function deleteTask(Task $task)
     {
-        $this->_QueueJobs
-            ->where('id', $task->id)
-            ->where('is_taken', 1)
-            ->where('error', null)
-            ->delete();
+        try {
+            $this->_QueueJobs
+                ->where('id', $task->id)
+                ->where('is_taken', 1)
+                ->where('error', null)
+                ->delete();
+        }
+        catch (\mysqli_sql_exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
 
         return true;
     }
@@ -110,10 +143,15 @@ class Codeigniter implements PersistorInterface
      */
     public function setError(Task $task)
     {
-        $this->_QueueJobs
-            ->update($task->id, [
-                'error' => 1
-            ]);
+        try {
+            $this->_QueueJobs
+                ->update($task->id, [
+                    'error' => 1
+                ]);
+        }
+        catch (\mysqli_sql_exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
             
         return true;
     }
@@ -126,24 +164,30 @@ class Codeigniter implements PersistorInterface
      */
     public function getTask($priority = null)
     {
+        try {
+            $this->_QueueJobs->where('is_taken', 0);
+            if ($priority !== null) {
+                $this->_QueueJobs->where('priority', $priority);
+            }
+            $this->_QueueJobs->orderBy('created_at', 'asc');
+            
+            $QueueJob = $this->_QueueJobs->first();
 
-        $this->_QueueJobs->where('is_taken', 0);
-        if ($priority !== null) {
-            $this->_QueueJobs->where('priority', $priority);
-		}
-        $this->_QueueJobs->orderBy('created_at', 'asc');
+            if (empty($QueueJob)) {
+                return null;
+            }
+
+            $QueueJob->is_taken = 1;
+
         
-        $QueueJob = $this->_QueueJobs->first();
-
-        if (empty($QueueJob)) {
-            return null;
+            $this->_QueueJobs->save($QueueJob);
+            
+            return $QueueJob->data;
+        }
+        catch (\mysqli_sql_exception $ex) {
+            $this->_handelMysqliSqlException($ex);
         }
 
-		$QueueJob->is_taken = 1;
-		
-        $this->_QueueJobs->save($QueueJob);
-
-        return $QueueJob->data;
     }
 
     /**
@@ -160,7 +204,12 @@ class Codeigniter implements PersistorInterface
         
         $this->_QueueJobs->orderBy('created_at', 'asc');
 
-        $allTasks = $this->_QueueJobs->findAll();
+        try {
+            $allTasks = $this->_QueueJobs->findAll();
+        }
+        catch (\mysqli_sql_exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
 
         return $allTasks;
     }
@@ -170,11 +219,17 @@ class Codeigniter implements PersistorInterface
      */
     public function clear()
     {
-        // $this->_QueueJobs->emptyTable();
-        $this->_QueueJobs
-            ->where('is_taken', 0)
-            ->orWhere('is_taken', 1)
-            ->delete();
+        try{
+
+            // $this->_QueueJobs->emptyTable();
+            $this->_QueueJobs
+                ->where('is_taken', 0)
+                ->orWhere('is_taken', 1)
+                ->delete();
+
+        }catch (\mysqli_sql_exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
     }
 
     /**
@@ -185,10 +240,21 @@ class Codeigniter implements PersistorInterface
      */
     protected function _hasTaskByUniqueId($uniqueId)
     {
+        
         $queueAllJobs = $this->_QueueJobs
                         ->where('is_taken', 0)
                         ->where('unique_id', $uniqueId)
                         ->findAll();
         return !empty($queueAllJobs);
     }
+
+    protected function _handelMysqliSqlException($ex)
+    {
+        throw new \CodeigniterExt\Queue\DBConnectionException(
+            $ex->getMessage(),
+            (int)$ex->getCode(),
+            $ex->getPrevious()
+        );
+    }
+
 }
