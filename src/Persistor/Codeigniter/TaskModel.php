@@ -9,14 +9,13 @@ use CodeIgniter\Model;
  *
  */
 
-class CodeigniterModel extends Model
+class TaskModel extends Model
 {
-
     protected $DBGroup;
     
     protected $table;
     
-    protected $returnType;
+    protected $returnType = 'CodeigniterExt\Queue\Persistor\codeigniter\TaskEntity';
 
 
     protected $primaryKey = 'id';
@@ -58,7 +57,6 @@ class CodeigniterModel extends Model
 			$this->DBGroup		= $options['db_group'];
 		}
 		$this->table		= $options['table_name'];
-        $this->returnType	= $options['entity'];
 
         $this->db = \Config\Database::connect();
         

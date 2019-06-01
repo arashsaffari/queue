@@ -7,7 +7,6 @@ use CodeigniterExt\Queue\Queue;
 /**
  * Task
  *
- * @author anorgan
  */
 class Task
 {

@@ -48,7 +48,7 @@ class Worker extends Controller
 						'text'      => 'It\'s your faithful QuTee!'
 					)
 				)
-				->setPriority(Task::PRIORITY_HIGH);
+				->setPriority(Task::PRIORITY_LOW);
 				// ->setUniqueId('send_mail_email'. $i .'@domain.tld');
 
 			// Queue it
@@ -66,11 +66,11 @@ class Worker extends Controller
 						'text'      => 'It\'s your faithful QuTee!'
 					)
 				)
-				->setPriority(Task::PRIORITY_HIGH);
+				->setPriority(Task::PRIORITY_NORMAL);
 				// ->setUniqueId('send_mail_email'. $i .'@domain.tld');
-
-			// Queue it
-			$queue->addTask($task);
+				
+				// Queue it
+				$queue->addTask($task);
 
 			
 		}
@@ -86,10 +86,13 @@ class Worker extends Controller
     {
 
 		$queue = new Queue();
+		
 		$worker = new \CodeigniterExt\Queue\Worker();
 		$worker
 			->setQueue($queue)
 			->setInterval(0.5);
+
+
 		$task = $worker->getTask();
 		if ($task !== null) {
 			$worker->run($task);

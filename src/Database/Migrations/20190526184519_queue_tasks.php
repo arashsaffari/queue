@@ -2,7 +2,7 @@
 
 use CodeIgniter\Database\Migration;
 
-class Migration_queue_jobs extends Migration
+class Migration_queue_tasks extends Migration
 {
 	public function up()
 	{
@@ -52,19 +52,19 @@ class Migration_queue_jobs extends Migration
 			'error'			=> [
 				'type' => 'tinyint',
 				'constraint' => 1,
-				'null' => true,
-				'default' => null
+				'null' => false,
+				'default' => 0
 			],
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('queue_jobs', true);
+        $this->forge->createTable('queue_tasks', true);
 	}
 
 	//--------------------------------------------------------------------
 
 	public function down()
 	{
-		$this->forge->dropTable('queue_jobs', true);
+		$this->forge->dropTable('queue_tasks', true);
 	}
 }

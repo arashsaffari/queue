@@ -152,8 +152,8 @@ class Worker
         }
 
         return $task;
-
     }
+
 
 
 
@@ -246,7 +246,7 @@ class Worker
     {
         $taskClassName  = $task->getClassName();
         if (!class_exists($taskClassName)) {
-            throw new \InvalidArgumentException(sprintf('Task class "%s" not found', $taskClassName));
+            throw new \InvalidArgumentException(sprintf('Error! Task %s not found', $task->getName()));
         }
 
         $taskObject     = new $taskClassName;

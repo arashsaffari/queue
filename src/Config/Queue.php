@@ -12,15 +12,14 @@ class Queue extends BaseConfig
     //--------------------------------------------------------------------
     // 
     //
-    public $queueConnection = 'pdo';
+    public $queueConnection = 'codeigniter';
 
 
     public $codeigniter = [
 		'persistor'			=> 'CodeigniterExt\Queue\Persistor\codeigniter\Codeigniter',
 		'params'    		=> [
-			'db_group'		=> '',
-			'entity'		=> 'CodeigniterExt\Queue\Persistor\codeigniter\QueueJobEntity',
-			'table_name'	=> 'queue_jobs',
+			'db_group'		=> false,
+			'table_name'	=> 'queue_tasks',
 		],
 	];
 	
@@ -30,7 +29,7 @@ class Queue extends BaseConfig
 			'dsn'       => 'mysql:host=localhost;dbname=ci4_modules;charset=utf8',
 			'username'  => 'root',
 			'password'  => 'root',
-			'table_name'=> 'queue_jobs1'
+			'table_name'=> 'queue_tasks1'
 		],
 	];
 

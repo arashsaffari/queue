@@ -4,7 +4,7 @@ namespace CodeigniterExt\Queue\Persistor\Codeigniter;
 
 use CodeIgniter\Entity;
 
-class QueueJobEntity extends Entity
+class TaskEntity extends Entity
 {
 	
 	protected $id;

@@ -9,7 +9,7 @@ use CodeigniterExt\Queue\Persistor\PersistorInterface;
  * PDO persistor, use table with columns: name, data, priority
  *
  * MySQL 
- CREATE TABLE IF NOT EXISTS `queue_jobs1` (
+ CREATE TABLE IF NOT EXISTS `queue_tasks` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
     `method_name` VARCHAR(255) NULL,
@@ -18,7 +18,7 @@ use CodeigniterExt\Queue\Persistor\PersistorInterface;
     `unique_id` VARCHAR(32) NULL,
     `created_at` DATETIME NOT NULL,
     `is_taken` TINYINT(1) NOT NULL DEFAULT 0,
-    `is_taken` TINYINT(1) NULL,
+    `error` TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`))
   ENGINE = InnoDB;
 
@@ -52,15 +52,6 @@ class Pdo implements PersistorInterface
     public function __construct($options = null)
     {
         $this->setOptions($options);
-    }
-
-    /**
-     *
-     * @return array
-     */
-    public function getOptions()
-    {
-        return $this->_options;
     }
 
     /**
@@ -182,6 +173,20 @@ class Pdo implements PersistorInterface
         } catch (\Exception $ex) {
             $this->_handelMysqliSqlException($ex);
         }
+        
+    }
+
+    /**
+     * Return only a task with this ID
+     * this task can also be executed or faulty
+     * 
+     *
+     * @param integer $id Return only a task with this ID
+     * @param boolean $ran Return only a executed task with this ID
+     * @param boolean $faulty Return only executed and faulty tasks with this ID
+     * @return \CodeigniterExt\Queue\Task|null
+     */
+    public function getTaskWithID(int $id = null, bool $executed = false , bool $faulty = false){
         
     }
 

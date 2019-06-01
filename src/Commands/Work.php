@@ -5,6 +5,7 @@ use CodeIgniter\CLI\CLI;
 
 use CodeigniterExt\Queue\Worker;
 use CodeigniterExt\Queue\Queue;
+use CodeigniterExt\Queue\Task;
 
 class Work extends BaseCommand
 {
@@ -15,7 +16,7 @@ class Work extends BaseCommand
 	protected $arguments    = [];
 	protected $options 		= [
 		'-once'  			=> 'Only process the next job on the queue',
-		'-priority'			=> 'The priority name of the queues to work [1,2,3]. (default 0 - all jobs)',
+		'-priority'			=> 'The priority name of the queues to work [low, normal, high, all]. (default all)',
 		'-stop_when_empty'	=> 'Stop when the queue is empty',
 		'-quiet'			=> 'Do not output any message',
 		'-sleep'			=> 'Number of seconds to sleep after job is done (default 1 sec)',
@@ -52,12 +53,27 @@ class Work extends BaseCommand
 			$this->sleep_no_job = 3;
 		}
 		
-		if (!ctype_digit($this->priority)){
-			$this->priority = 0;
-		}else{
-			if($this->priority > 3 || $this->priority < 1){
-				$this->priority = 0;
-			}
+		
+		if (is_bool($this->priority)){
+			$this->priority = false;
+		}
+
+		switch ($this->priority) {
+			case 'low':
+				$this->priority = Task::PRIORITY_LOW;
+				break;
+			
+			case 'normal':
+				$this->priority = Task::PRIORITY_NORMAL;
+				break;
+			
+			case 'high':
+				$this->priority = Task::PRIORITY_HIGH;
+				break;
+
+			default:
+				$this->priority = false;
+				break;
 		}
 
 		
@@ -95,6 +111,10 @@ class Work extends BaseCommand
 					$this->worker
 						->setQueue($this->queue)
 						->setInterval($this->sleep);
+					
+					if ($this->priority){
+						$this->worker->setPriority($this->priority);
+					}
 				}
 
 				
@@ -149,7 +169,7 @@ class Work extends BaseCommand
 
 		}
 	}
-
+	
 	private function exception_handler($ex)
 	{
 
@@ -161,8 +181,8 @@ class Work extends BaseCommand
 				$taskID = '';
 			}
 
-			CLI::write(
-				CLI::color($taskID. $ex->getMessage(), 'red') . ': ' .
+			CLI::error(
+				$taskID. $ex->getMessage() . ': ' .
 				CLI::color($ex->getFile(), 'yellow') . ':' .
 				'' . $ex->getLine() . ''
 			);

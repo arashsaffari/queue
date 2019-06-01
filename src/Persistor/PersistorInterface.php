@@ -13,18 +13,11 @@ interface PersistorInterface
     /**
      * Set options
      *
-     * @param array $options
+     * @param Array Queue\Config\Queue  $queueConnection['params']
      *
      * @return PersistorInterface
      */
     public function setOptions(array $options);
-
-    /**
-     * Get options
-     *
-     * @return array
-     */
-    public function getOptions();
 
     /**
      * Add task to the queue
@@ -43,6 +36,26 @@ interface PersistorInterface
      * @return \CodeigniterExt\Queue\Task|null
      */
     public function getTask($priority = null);
+
+     /**
+      * Get a task with ID
+      *
+      * @param integer $id Return only tasks with this ID
+      * @return \CodeigniterExt\Queue\Task|null
+      */
+
+
+    /**
+     * Return only a task with this ID
+     * this task can also be executed or faulty
+     * 
+     *
+     * @param integer $id Return only a task with this ID
+	 * @param string $ran Return only a executed task with this ID
+	 * @param string $faulty Return only executed and faulty tasks with this ID
+	 * @return \CodeigniterExt\Queue\Task|null
+	 */
+	public function getTaskWithID(int $id = null, string $executed = null , string $faulty = null);
 
     /**
      * Get all tasks from the queue
