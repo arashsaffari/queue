@@ -196,7 +196,7 @@ class Pdo implements PersistorInterface
      *
      * @return boolen
      */
-    public function setError(Task $task)
+    public function setTaskAsFailed(Task $task)
     {
 
         try {
@@ -217,33 +217,6 @@ class Pdo implements PersistorInterface
             $this->_handelMysqliSqlException($ex);
         }
         
-    }
-
-    /**
-     * 
-     * @param int $priority
-     *
-     * @return Task[]
-     */
-    public function getTasks($priority = null) 
-    {
-        if ($priority !== null) {
-            $array = array(':priority' => $priority);
-        } else {
-            $array = null;
-        }
-
-        $statement  = $this->_getPdo()->query(sprintf('
-            SELECT * FROM %s %s
-        ', $this->_options['table_name'], $priority !== null ? 'WHERE priority = :priority' : ''));
-        $statement->execute($array);
-        $tasks  = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        
-        foreach ($tasks as $k => $data) {
-            $tasks[$k]  = unserialize($data['data']);
-        }
-
-        return $tasks;
     }
 
     /**

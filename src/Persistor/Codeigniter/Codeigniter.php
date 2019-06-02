@@ -39,28 +39,31 @@ class Codeigniter implements PersistorInterface
 		$this->setOptions($options);
 	}
 
+
 	/**
 	 *
-	 * @param Array Config\Queue  $queueConnection['params']
-	 *
-	 * @return $queueConnection['params']
-	 */
+	 * @param Array Queue\Config\Queue  $queueConnection['params']
+     *
+     * @return PersistorInterface
+     */
 	public function setOptions(array $options)
 	{	
 		$this->_TaskModel 	= new TaskModel($options);
-
 		$this->_TaskEntity 	= new  $this->_TaskModel->returnType;
-
+		
 		$this->_testConnection();
-
+		
 		$this->_options = $options;
+
+		return $this;
 	}
+
 
 	/**
 	 * 
 	 * @param \CodeigniterExt\Queue\Task $task
 	 *
-	 * @return \CodeigniterExt\Queue\Persistor\Pdo
+	 * @return \CodeigniterExt\Queue\Persistor\Codeigniter
 	 */
 	public function addTask(Task $task)
 	{
@@ -85,152 +88,13 @@ class Codeigniter implements PersistorInterface
 		return $this;
 	}
 
-	/**
-	 * 
-	 * @param \CodeigniterExt\Queue\Task $task
-	 *
-	 * @return boolen
-	 */
-	public function deleteTask(Task $task)
-	{
-		try {
-			$this->_TaskModel
-				->where([
-					'id' 		=> $task->id,
-					'is_taken' 	=> 1,
-					'error' 	=> 0
-				])
-				->delete();
-		}
-		catch (\mysqli_sql_exception $ex) {
-			$this->_handelMysqliSqlException($ex);
-		}
-
-		return true;
-	}
-
 
 	/**
 	 * 
-	 * @param \CodeigniterExt\Queue\Task $task
-	 *
-	 * @return boolen
-	 */
-	public function setError(Task $task)
-	{
-		try {
-			$this->_TaskModel
-				->update($task->id, [
-					'error' => 1
-				]);
-		}
-		catch (\mysqli_sql_exception $ex) {
-			$this->_handelMysqliSqlException($ex);
-		}
-			
-		return true;
-	}
-
-
-	/**
-	 * 
-	 * @param \CodeigniterExt\Queue\Task $task
-	 *
-	 * @return boolen
-	 */
-	public function setTaken(Task $task)
-	{
-		try {
-			$this->_TaskModel->update($task->id, [
-				'is_taken' => 1
-			]);
-		}
-		catch (\mysqli_sql_exception $ex) {
-			$this->_handelMysqliSqlException($ex);
-		}
-			
-		return true;
-	}
-
-
-	/**
-	 * 
-	 * @param \CodeigniterExt\Queue\Task $task
-	 *
-	 * @return boolen
-	 */
-	public function updateTask(Task $task)
-	{
-		try {
-
-			$this->_TaskModel->update($task->id, [
-				"is_taken" 	=> 0,
-				"error"     => 0,
-			]);
-
-		}
-		catch (\mysqli_sql_exception $ex) {
-			$this->_handelMysqliSqlException($ex);
-		}
-			
-		return true;
-	}
-
-
-	/**
-	 * 
-	 *
-	 * @return boolen
-	 */
-	public function resetFailedTasks()
-	{
-		try {
-
-			$this->_TaskModel
-    			->where(['error'=> 1])
-    			->set([
-					'is_taken' => 0,
-					'error'=> 0
-				])
-    			->update();
-
-		}
-		catch (\mysqli_sql_exception $ex) {
-			$this->_handelMysqliSqlException($ex);
-		}
-			
-		return true;
-	}
-
-	
-	/**
-	 * 
-	 *
-	 * @return int
-	 */
-	public function getCountFailedTasks()
-	{
-		try {
-
-			(int)$counter = $this->_TaskModel
-    			->where(['error'=> 1])
-				->countAllResults();
-
-		}
-		catch (\mysqli_sql_exception $ex) {
-			$this->_handelMysqliSqlException($ex);
-		}
-			
-		return $counter;
-	}
-
-
-	/**
-	 * 
-	 * @param int $priority
-	 *
-	 * @return Task|null
-	 */
+	 * @param int $priority Return only tasks with this priority
+     *
+     * @return \CodeigniterExt\Queue\Task|null
+     */
 	public function getTask($priority = null)
 	{
 		try {
@@ -246,10 +110,7 @@ class Codeigniter implements PersistorInterface
 				return null;
 			}
 
-			$QueueJob->is_taken = 1;
-
-		
-			$this->_TaskModel->save($QueueJob);
+			$this->setTaskAsTaken($QueueJob->data);
 			
 			return $QueueJob->data;
 		}
@@ -259,10 +120,8 @@ class Codeigniter implements PersistorInterface
 
 	}
 
+
 	/**
-	 * Return only a task with this ID
-	 * this task can also be executed or faulty
-	 * 
 	 *
 	 * @param integer $id Return only a task with this ID
 	 * @param string $ran Return only a executed task with this ID
@@ -319,47 +178,238 @@ class Codeigniter implements PersistorInterface
 		}
 	}
 
+
 	/**
 	 * 
-	 * @param int $priority
+	 * @param \CodeigniterExt\Queue\Task $task
 	 *
-	 * @return Task[]
+	 * @return boolen
 	 */
-	public function getTasks($priority = null) 
+	public function setTaskAsTaken(Task $task)
 	{
-		if ($priority !== null) {
-			$this->_TaskModel->where('priority', $priority);
-		}
-		
-		$this->_TaskModel->orderBy('created_at', 'asc');
-
 		try {
-			$allTasks = $this->_TaskModel->findAll();
+			$this->_TaskModel->update($task->id, [
+				'is_taken' => 1
+			]);
+		}
+		catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+		}
+			
+		return true;
+	}
+
+
+	/**
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+	public function setTaskAsNotTakenNotfailed(Task $task)
+	{
+		try {
+
+			$this->_TaskModel->update($task->id, [
+				"is_taken" 	=> 0,
+				"error"     => 0,
+			]);
+
+		}
+		catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+		}
+			
+		return true;
+	}
+
+
+	/**
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+	public function setTaskAsFailed(Task $task)
+	{
+		try {
+			$this->_TaskModel
+				->update($task->id, [
+					'error' => 1
+				]);
+		}
+		catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+		}
+			
+		return true;
+	}
+
+
+	/**
+	 * 
+	 * @return boolen
+	 */
+	public function resetAllFailedTasks()
+	{
+		try {
+
+			$this->_TaskModel
+    			->where(['error'=> 1])
+    			->set([
+					'is_taken' => 0,
+					'error'=> 0
+				])
+    			->update();
+
+		}
+		catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+		}
+			
+		return true;
+	}
+
+
+	/**
+	 *
+	 * @return int
+	 */
+	public function countFailedTasks()
+	{
+		try {
+
+			(int)$counter = $this->_TaskModel
+    			->where(['error'=> 1])
+				->countAllResults();
+
+		}
+		catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+		}
+			
+		return $counter;
+	}
+
+
+	/**
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+	public function deleteTask(Task $task)
+	{
+		try {
+			$this->_TaskModel
+				->where([
+					'id' 		=> $task->id,
+					'is_taken' 	=> 1,
+					'error' 	=> 0
+				])
+				->delete();
 		}
 		catch (\mysqli_sql_exception $ex) {
 			$this->_handelMysqliSqlException($ex);
 		}
 
-		return $allTasks;
+		return true;
 	}
 
+
 	/**
-	 * Clear all tasks
+	 *
+	 * @param integer $id
+	 * @param string $executed
+	 * @param string $faulty
+	 * @return int $affectedRows
+	 */
+	public function deleteTaskWithID(int $id = null, string $executed = null , string $faulty = null)
+	{
+
+		if ( !is_int($id) || $id === 0 ){
+			throw new \Exception('id was not entered');
+		}
+
+		if(null !== $executed){
+			$executed = ($executed !== "0") ? 1 : 0;
+		}
+
+		if(null !== $faulty){
+			$faulty = ($faulty !== "0") ? 1 : 0;
+		}
+
+		try {
+
+			$whereArray = array('id' => $id );
+
+			if (null !== $executed){
+				$whereArray = array_merge($whereArray, [
+					'is_taken' => $executed
+				]);
+			}
+
+			if (null !== $faulty){
+				$whereArray = array_merge($whereArray, [
+					'error' => $faulty
+				]);
+			}
+
+			$this->_TaskModel
+				->where($whereArray)
+				->delete();
+
+			return $this->_TaskModel->affectedRows();
+
+		}
+		catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+			return false;
+		}
+	}
+
+
+	/**
+	 * 
+	 * @return int $affectedRows
 	 */
 	public function clear()
 	{
 		try{
 
-			// $this->_TaskModel->emptyTable();
-			$this->_TaskModel
-				->where('is_taken', 0)
-				->orWhere('is_taken', 1)
-				->delete();
+			$this->_TaskModel->emptyTable();
+			// $this->_TaskModel
+			// 	->where('is_taken', 0)
+			// 	->orWhere('is_taken', 1)
+			// 	->delete();
+			return $this->_TaskModel->affectedRows();
 
 		}catch (\mysqli_sql_exception $ex) {
 			$this->_handelMysqliSqlException($ex);
 		}
 	}
+
+
+	/**
+	 * 
+	 * @return int $affectedRows
+	 */
+	public function clearFailed()
+	{
+		try{
+
+			$this->_TaskModel
+				->where('error', 1)
+				->delete();
+			
+			return $this->_TaskModel->affectedRows();
+
+		}catch (\mysqli_sql_exception $ex) {
+			$this->_handelMysqliSqlException($ex);
+			return false;
+		}
+	}
+
 
 	/**
 	 * Test connection, reconnect if needed
@@ -382,6 +432,7 @@ class Codeigniter implements PersistorInterface
 		}
 	}
 
+
 	/**
 	 * 
 	 * @param string $uniqueId
@@ -397,6 +448,7 @@ class Codeigniter implements PersistorInterface
 						->findAll();
 		return !empty($queueAllJobs);
 	}
+
 
 	/**
 	 * Undocumented function

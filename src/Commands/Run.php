@@ -132,7 +132,7 @@ class Run extends BaseCommand
 
 		if ($this->task !== null) {
 			try{
-				$this->worker->setError($this->task);
+				$this->worker->setTaskAsFailed($this->task);
 			}
 			catch (\Exception $ex) {
 				

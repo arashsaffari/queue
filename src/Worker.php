@@ -155,8 +155,6 @@ class Worker
     }
 
 
-
-
     /**
      * Run the worker, run them
      *
@@ -198,7 +196,7 @@ class Worker
      *
      * @return null
      */
-    public function setError($task)
+    public function setTaskAsFailed($task)
     {
         $this->getQueue()
                 ->setTaskError($task);

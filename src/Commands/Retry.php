@@ -31,12 +31,12 @@ class Retry extends BaseCommand
 
 		if ( !ctype_digit($id) )
 		{
-			$id = CLI::prompt("please enter the task ID number");
+			$id = CLI::prompt("please enter the task ID");
 		}
 
 		if ( !ctype_digit($id) )
 		{
-			CLI::error('specified ID number is wrong!');
+			CLI::error('The specified ID is wrong!');
 			return;
 		}
 
@@ -63,7 +63,7 @@ class Retry extends BaseCommand
 				//
 				$this->task->error = 0;
 				$this->task->is_taken = 0;
-				$this->queue->getPersistor()->updateTask($this->task);
+				$this->queue->getPersistor()->setTaskAsNotTakenNotfailed($this->task);
 
 				if (!$this->quiet){
 					CLI::write(
@@ -77,7 +77,7 @@ class Retry extends BaseCommand
 			
 			}else{
 			
-				if (!$this->quiet) CLI::error('Either the task is not in the database or there is no error flag');
+				if (!$this->quiet) CLI::error('Either the task is not in the database or the task has not been marked as error');
 			
 			}
 

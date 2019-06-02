@@ -19,6 +19,7 @@ interface PersistorInterface
      */
     public function setOptions(array $options);
 
+
     /**
      * Add task to the queue
      *
@@ -28,21 +29,16 @@ interface PersistorInterface
      */
     public function addTask(\CodeigniterExt\Queue\Task $task);
 
+
     /**
-     * Get next task from the queue Update it (is_taken = 1) task
+     * Get next task from the queue and update it as taken task
+     * update is_taken = 1
      *
      * @param int $priority Return only tasks with this priority
      *
      * @return \CodeigniterExt\Queue\Task|null
      */
     public function getTask($priority = null);
-
-     /**
-      * Get a task with ID
-      *
-      * @param integer $id Return only tasks with this ID
-      * @return \CodeigniterExt\Queue\Task|null
-      */
 
 
     /**
@@ -52,44 +48,97 @@ interface PersistorInterface
      *
      * @param integer $id Return only a task with this ID
 	 * @param string $ran Return only a executed task with this ID
-	 * @param string $faulty Return only executed and faulty tasks with this ID
+	 * @param string $faulty Return only a faulty tasks with this ID
 	 * @return \CodeigniterExt\Queue\Task|null
 	 */
-	public function getTaskWithID(int $id = null, string $executed = null , string $faulty = null);
+    public function getTaskWithID(int $id = null, string $executed = null , string $faulty = null);
+
 
     /**
-     * Get all tasks from the queue
-     *
-     * @param int $priority Return only tasks with this priority
-     *
-     * @return array array of tasks
-     */
-    public function getTasks($priority = null);
-
-    /**
-     * Clear all tasks from queue
-     *
-     * @return boolean
-     */
-    public function clear();
-
-    /**
-     * set error (error = 1) to given task in queue
+     * Set a task as taken
+     * update is_taken = 1
      *
      * @param \CodeigniterExt\Queue\Task $name
      * 
      * @return boolean
      */
-    public function setError(\CodeigniterExt\Queue\Task $task);
+    public function setTaskAsTaken(\CodeigniterExt\Queue\Task $task);
+
+
+    /**
+     * Set task to not done and failed
+     * update is_taken = 0, error = 0
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+    public function setTaskAsNotTakenNotfailed(\CodeigniterExt\Queue\Task $task);
+
+
+    /**
+     * set task as failed
+     * update error = 1
+     *
+     * @param \CodeigniterExt\Queue\Task $name
+     * 
+     * @return boolen
+     */
+    public function setTaskAsFailed(\CodeigniterExt\Queue\Task $task);
+
+
+    /**
+     * 
+	 * Reset all failed task to not taken and not failed
+     * update is_taken = 0, error = 0
+	 *
+	 * @return boolen
+	 */
+    public function resetAllFailedTasks();
+
+
+    /**
+	 * Count failed tasks
+	 *
+	 * @return int
+	 */
+    public function countFailedTasks();
+
 
     /**
      * delete completed task from the queue
      *
      * @param \CodeigniterExt\Queue\Task $name
      *
-     * @return boolean
+     * @return boolen
      */
     public function deleteTask(\CodeigniterExt\Queue\Task $task);
 
+
+    /**
+	 * delete a task with ID
+	 *
+	 * @param integer $id
+	 * @param string $executed
+	 * @param string $faulty
+	 * @return int $affectedRows
+	 */
+    public function deleteTaskWithID(int $id = null, string $executed = null , string $faulty = null);
+
+
+    /**
+     * Delete all tasks
+     *
+     * @return int $affectedRows
+     */
+    public function clear();
+
+
+    /**
+     * Delete all failed tasks
+     *
+     * @return int $affectedRows
+     */
+    public function clearFailed();
 
 }

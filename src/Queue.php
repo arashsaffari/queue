@@ -142,18 +142,7 @@ class Queue
 	 */
 	public function setTaskError(Task $task)
 	{
-		return $this->getPersistor()->setError($task);
-	}
-
-	/**
-	 *
-	 * @param int $priority
-	 *
-	 * @return array
-	 */
-	public function getTasks($priority = null)
-	{
-		return $this->getPersistor()->getTasks($priority);
+		return $this->getPersistor()->setTaskAsFailed($task);
 	}
 
 	/**

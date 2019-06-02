@@ -172,7 +172,6 @@ class Work extends BaseCommand
 	
 	private function exception_handler($ex)
 	{
-
 		if (!$this->quiet){
 			
 			if(isset($this->task->id)){
@@ -192,12 +191,13 @@ class Work extends BaseCommand
 			'Queue Error - ' . 
 			$ex->getMessage() . ': ' .
 			$ex->getFile() .
-			' (' . $ex->getLine() . ')'
+			' (' . $ex->getLine() . ')'.
+			$ex.PHP_EOL.PHP_EOL
 		);
 
 		if ($this->task !== null) {
 			try{
-				$this->worker->setError($this->task);
+				$this->worker->setTaskAsFailed($this->task);
 			}
 			catch (\Exception $ex) {
 				

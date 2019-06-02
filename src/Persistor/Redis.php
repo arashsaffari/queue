@@ -111,36 +111,6 @@ class Redis implements PersistorInterface
         return unserialize($taskData['task']);
     }
 
-    /**
-     *
-     * @param int $priority
-     *
-     * @return array
-     */
-    public function getTasks($priority = null)
-    {
-        $tasks  = array();
-
-        if (null !== $priority) {
-            // Get only the requested priority queue
-            $queues = (array) $this->_createQueueName($priority);
-        } else {
-            // Get all queues
-            $queues = (array) $this->_getRedis()->smembers('queues');
-        }
-
-        foreach ($queues as $queue) {
-            $tasks += (array) $this->_getRedis()->lrange($queue, 0, 1000);
-        }
-
-        foreach ($tasks as $k => $data) {
-            $data       = unserialize($data);
-            $tasks[$k]  = unserialize($data['task']);
-        }
-
-        return $tasks;
-    }
-
 
     /**
      * Clear queue

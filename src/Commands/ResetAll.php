@@ -4,12 +4,12 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 use CodeigniterExt\Queue\Queue;
 
-class Reset extends BaseCommand
+class ResetAll extends BaseCommand
 {
 	protected $group        = 'Queue';
-	protected $name         = 'queue:reset';
-	protected $description  = 'Reset all failed queue tasks';
-	protected $usage        = 'queue:reset';
+	protected $name         = 'queue:resetall';
+	protected $description  = 'Reset all failed queue tasks as not executed and they can be run in queue';
+	protected $usage        = 'queue:resetall';
 	protected $arguments    = [];
 	protected $options 		= [
 		'-quiet'	=> 'Do not output any message',
@@ -36,7 +36,7 @@ class Reset extends BaseCommand
 		//
 		// All failed queue tasks are counted
 		//
-		$count = $this->queue->getPersistor()->getCountFailedTasks();
+		$count = $this->queue->getPersistor()->countFailedTasks();
 
 		if($count>0){
 
@@ -50,23 +50,27 @@ class Reset extends BaseCommand
 			if (!$this->quiet) CLI::newLine(1);
 
 			if (!$this->quiet){
-				$ResetAllTaskYesNo = CLI::prompt('Do you really want to reset the failed tasks', ['y','n']);
+				$resetConfirm = CLI::prompt('Do you really want to reset all failed tasks', ['y','n']);
 			}else{
-				$ResetAllTaskYesNo = "y";
+				$resetConfirm = "y";
 			}
 
-			if ($ResetAllTaskYesNo === "y"){
-				//
-				// update task in DB
-				//
-				$this->queue->getPersistor()->resetFailedTasks();
+			//
+			// if Reset has not been confirmed app should stop running
+			//
+			if ($resetConfirm !== "y") exit;
 
-				if (!$this->quiet){
-					CLI::write(
-						CLI::color('Reset all failed queue tasks ', 'green')
-					);
-				}
+			//
+			// update task in DB
+			//
+			$this->queue->getPersistor()->resetAllFailedTasks();
+
+			if (!$this->quiet){
+				CLI::write(
+					CLI::color('Reset all failed queue tasks ', 'green')
+				);
 			}
+			
 			
 		}else{
 			if (!$this->quiet){
