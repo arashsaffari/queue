@@ -12,7 +12,7 @@ class Queue extends BaseConfig
     //--------------------------------------------------------------------
     // 
     //
-    public $queueConnection = 'codeigniter';
+    public $queueConnection = 'pdo';
 
 
     public $codeigniter = [

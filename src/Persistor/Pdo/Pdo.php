@@ -56,9 +56,9 @@ class Pdo implements PersistorInterface
 
     /**
      *
-     * @param array $options
+     * @param Array Queue\Config\Queue  $queueConnection['params']
      *
-     * @return Pdo
+     * @return PersistorInterface
      */
     public function setOptions(array $options)
     {
@@ -69,9 +69,9 @@ class Pdo implements PersistorInterface
 
     /**
      * 
-     * @param \Qutee\Task $task
-     *
-     * @return \Qutee\Persistor\Pdo
+     * @param \CodeigniterExt\Queue\Task $task
+	 *
+     * @return \CodeigniterExt\Queue\Persistor\Pdo
      */
     public function addTask(Task $task)
     {
@@ -104,27 +104,15 @@ class Pdo implements PersistorInterface
 
     /**
      * 
-     * @param int $priority
+     * @param int $priority Return only tasks with this priority
      *
-     * @return Task|null
+     * @return \CodeigniterExt\Queue\Task|null
      */
     public function getTask($priority = null)
     {
         try {
             
             $this->_getPdo()->exec('SET @ID = 0;');
-
-            // UPDATE
-            //     jobs
-            // SET
-            //     id          = @ID := id,
-            //     is_taken    = 1
-            // WHERE
-            //     is_taken    = 0
-            //     AND priority = 1
-            // ORDER BY
-            //     created_at ASC
-            // LIMIT 1
             
             // Update first task that is not taken as taken, taking its ID
             $statement = $this->_getPdo()->prepare(sprintf('
@@ -177,18 +165,154 @@ class Pdo implements PersistorInterface
     }
 
     /**
-     * Return only a task with this ID
-     * this task can also be executed or faulty
-     * 
-     *
-     * @param integer $id Return only a task with this ID
-     * @param boolean $ran Return only a executed task with this ID
-     * @param boolean $faulty Return only executed and faulty tasks with this ID
-     * @return \CodeigniterExt\Queue\Task|null
-     */
-    public function getTaskWithID(int $id = null, bool $executed = false , bool $faulty = false){
+	 *
+	 * @param integer $id Return only a task with this ID
+	 * @param string $ran Return only a executed task with this ID
+	 * @param string $faulty Return only executed and faulty tasks with this ID
+	 * @return \CodeigniterExt\Queue\Task|null
+	 */
+	public function getTaskWithID(int $id = null, string $executed = null , string $faulty = null)
+	{
+
+        if ( !is_int($id) || $id === 0 ){
+			throw new \Exception('id was not entered');
+		}
+
+		if(null !== $executed){
+			$executed = ($executed !== "0") ? 1 : 0;
+		}
+
+		if(null !== $faulty){
+			$faulty = ($faulty !== "0") ? 1 : 0;
+        }
         
+        try {
+            
+            // $this->_getPdo()->exec('SET @ID = 0;');
+            
+            // Update first task that is not taken as taken, taking its ID
+            $statement = $this->_getPdo()->prepare(sprintf('
+                UPDATE
+                    %s
+                SET
+                    is_taken    = 1
+                WHERE
+                    id = :id
+                    %s
+                    %s
+                ORDER BY
+                    created_at ASC
+                LIMIT 1
+            ',  $this->_options['table_name'],
+                $executed !== null ? 'AND `is_taken` = :executed' : '',
+                $faulty !== null ? 'AND `error` = :faulty' : ''
+            ));
+            
+            $array = null;
+            
+            $array = array(':id' => $id);
+
+            if ($executed !== null) {
+                $array = array_merge($array, [
+					':executed' => $executed
+				]);
+            }
+
+            if ($faulty !== null) {
+                $array = array_merge($array, [
+					':faulty' => $faulty
+				]);
+            }
+
+            $statement->execute($array);
+
+            // $statement->debugDumpParams();exit;
+
+            // if ($statement->rowCount() === 0) {
+            //     // No tasks
+            //     return null;
+            // }
+
+            // Now, get that task
+            $statement  = $this->_getPdo()->prepare(sprintf('SELECT * FROM %s WHERE id = '.$id.'', $this->_options['table_name']));
+            $statement->execute();
+
+            // echo "-".$statement->rowCount()."-";exit;
+
+            $taskData   = $statement->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$taskData) {
+                return null;
+            }
+
+            $fetchedTask = unserialize($taskData['data']);
+
+            $fetchedTask->id = $id;
+
+            return $fetchedTask;
+            
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
     }
+
+
+    /**
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+	public function setTaskAsTaken(Task $task)
+	{
+        try {
+
+            $this->_getPdo()->exec(
+                sprintf('
+                    UPDATE
+                        %s
+                    SET
+                        is_taken = 1
+                    WHERE
+                        id = %s
+            ', $this->_options['table_name'], $task->id));
+                
+            return true;
+
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+
+
+    /**
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+	public function setTaskAsNotTakenNotfailed(Task $task)
+	{
+        try {
+
+            $this->_getPdo()->exec(
+                sprintf('
+                    UPDATE
+                        %s
+                    SET
+                        `is_taken` = \'0\',
+                        `error` = \'0\'
+                    WHERE
+                        id = %s
+            ', $this->_options['table_name'], $task->id));
+
+            return true;
+
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+
 
     /**
      * 
@@ -201,15 +325,14 @@ class Pdo implements PersistorInterface
 
         try {
 
-            $this->_getPdo()->exec(
-                sprintf('
+            $this->_getPdo()->exec('
                     UPDATE
-                        %s
+                        '.$this->_options['table_name'].'
                     SET
-                        error = 1
+                        `error` = \'1\'
                     WHERE
-                        id = %s
-            ', $this->_options['table_name'], $task->id));
+                        `id` = '.$task->id.'
+            ');
                 
             return true;
 
@@ -220,30 +343,181 @@ class Pdo implements PersistorInterface
     }
 
     /**
-     * Clear all tasks
-     */
-    public function clear()
-    {
-        $this->_getPdo()->exec(sprintf('DELETE FROM %s', $this->_options['table_name']));
+	 * 
+	 * @return boolen
+	 */
+	public function resetAllFailedTasks()
+	{
+        try {
+
+            $this->_getPdo()->exec('
+                    UPDATE
+                        '.$this->_options['table_name'].'
+                    SET
+                        `is_taken` = \'0\',
+                        `error` = \'0\'
+                    WHERE
+                        `error` = 1
+            ');
+                
+            return true;
+
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+
+
+    /**
+	 *
+	 * @return int
+	 */
+	public function countFailedTasks()
+	{
+        try {
+            
+            $statement = $this->_getPdo()->prepare('
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        '.$this->_options['table_name'].'
+                    WHERE
+                        `error` = \'1\'
+            ');
+
+            $statement->execute();
+            
+            $taskData   = $statement->fetchColumn();
+
+            return $taskData;
+
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
     }
 
     /**
-     * Clear all tasks
-     */
-    public function deleteTask(Task $task)
-    {
+	 * 
+	 * @param \CodeigniterExt\Queue\Task $task
+	 *
+	 * @return boolen
+	 */
+	public function deleteTask(Task $task)
+	{
         try {
             $this->_getPdo()->exec(sprintf('
                 DELETE FROM %s
                     WHERE 
                         id = %s
                         AND is_taken = 1
-                        AND error IS NULL
+                        AND error = 0
                 ', $this->_options['table_name'], $task->id));
+
         } catch (\Exception $ex) {
             $this->_handelMysqliSqlException($ex);
         }
     }
+
+
+    /**
+	 *
+	 * @param integer $id
+	 * @param string $executed
+	 * @param string $faulty
+	 * @return int $affectedRows
+	 */
+	public function deleteTaskWithID(int $id = null, string $executed = null , string $faulty = null)
+	{
+        if ( !is_int($id) || $id === 0 ){
+			throw new \Exception('id was not entered');
+		}
+
+		if(null !== $executed){
+			$executed = ($executed !== "0") ? 1 : 0;
+		}
+
+		if(null !== $faulty){
+			$faulty = ($faulty !== "0") ? 1 : 0;
+        }
+        
+        try {
+            
+            // $this->_getPdo()->exec('SET @ID = 0;');
+            
+            // Update first task that is not taken as taken, taking its ID
+            $statement = $this->_getPdo()->prepare(sprintf('
+                DELETE FROM
+                    %s
+                WHERE
+                    id = :id
+                    %s
+                    %s
+            ',  $this->_options['table_name'],
+                $executed !== null ? 'AND `is_taken` = :executed' : '',
+                $faulty !== null ? 'AND `error` = :faulty' : ''
+            ));
+
+            $array = null;
+            
+            $array = array(':id' => $id);
+
+            if ($executed !== null) {
+                $array = array_merge($array, [
+					':executed' => $executed
+				]);
+            }
+
+            if ($faulty !== null) {
+                $array = array_merge($array, [
+					':faulty' => $faulty
+				]);
+            }
+
+            $statement->execute($array);
+
+            return $statement->rowCount();
+
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+
+
+    /**
+     * Clear all tasks
+     */
+    public function clear()
+    {
+        try {
+            $statement = $this->_getPdo()->prepare(sprintf('DELETE FROM %s', $this->_options['table_name']));
+            $statement->execute();
+            return $statement->rowCount();
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+
+
+    /**
+	 * 
+	 * @return int $affectedRows
+	 */
+	public function clearFailed()
+	{
+        try {
+            $statement = $this->_getPdo()->prepare(sprintf('
+                DELETE FROM 
+                    %s
+                WHERE
+                    id = :id
+                    %s', $this->_options['table_name']));
+            $statement->execute();
+            return $statement->rowCount();
+        } catch (\Exception $ex) {
+            $this->_handelMysqliSqlException($ex);
+        }
+    }
+    
 
     /**
      * 
@@ -339,12 +613,17 @@ class Pdo implements PersistorInterface
         return !empty($rows);
     }
 
-    protected function _handelMysqliSqlException($ex)
-    {
-        throw new \CodeigniterExt\Queue\DBConnectionException(
-            $ex->getMessage(),
-            (int)$ex->getCode(),
-            $ex->getPrevious()
-        );
-    }
+    /**
+	 * Undocumented function
+	 *
+	 * @param \mysqli_sql_exception $ex
+	 */
+	protected function _handelMysqliSqlException($ex)
+	{
+		throw new \CodeigniterExt\Queue\DBConnectionException(
+			$ex->getMessage(),
+			(int)$ex->getCode(),
+			$ex->getPrevious()
+		);
+	}
 }

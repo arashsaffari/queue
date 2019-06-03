@@ -3,7 +3,6 @@
 namespace CodeigniterExt\Queue\Persistor\Codeigniter;
 
 use CodeigniterExt\Queue\Persistor\Codeigniter\TaskModel;
-use CodeigniterExt\Queue\Persistor\Codeigniter\TaskEntity;
 
 use CodeigniterExt\Queue\Task;
 use CodeigniterExt\Queue\Persistor\PersistorInterface;
@@ -167,9 +166,7 @@ class Codeigniter implements PersistorInterface
 				return null;
 			}
 
-			$QueueJob->is_taken = 1;
-
-			$this->_TaskModel->save($QueueJob);
+			$this->setTaskAsTaken($QueueJob->data);
 			
 			return $QueueJob->data;
 		}

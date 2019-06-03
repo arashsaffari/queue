@@ -87,16 +87,6 @@ class Worker extends Controller
 
 		$queue = new Queue();
 		
-		$worker = new \CodeigniterExt\Queue\Worker();
-		$worker
-			->setQueue($queue)
-			->setInterval(0.5);
-
-
-		$task = $worker->getTask();
-		if ($task !== null) {
-			$worker->run($task);
-		}
 		
 
 		echo "Done!";
