@@ -26,11 +26,19 @@ class Publish extends BaseCommand
     {
         $this->determineSourcePath();
 
-        // Views
+        // Migration
         if (CLI::prompt('Publish queue migration?', ['y', 'n']) == 'y')
         {
             $this->publishMigration();
         }
+
+        // Config
+        if (CLI::prompt('Publish Config file?', ['y', 'n']) == 'y')
+        {
+            $this->publishConfig();
+        }
+
+
     }
 
     protected function publishMigration()
@@ -39,10 +47,18 @@ class Publish extends BaseCommand
         foreach ($map as $file)
         {
             $content = file_get_contents("{$this->sourcePath}/Database/Migrations/{$file}");
-            $content = $this->replaceNamespace($content, 'Myth\Auth\Database\Migrations', 'Database\Migrations');
             $this->writeFile("Database/Migrations/{$file}", $content);
         }
         CLI::write('Remember to run `spark migrate:latest` to migrate the database.', 'blue');
+    }
+
+    protected function publishConfig()
+    {
+        $path = "{$this->sourcePath}/Config/Queue.php";
+        $content = file_get_contents($path);
+        $appNamespace = APP_NAMESPACE;
+        $content = str_replace('namespace CodeigniterExt\Queue', "namespace {$appNamespace}\Config", $content);
+        $this->writeFile("Config/Queue.php", $content);
     }
 
     /**
