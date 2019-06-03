@@ -26,16 +26,16 @@ class Publish extends BaseCommand
     {
         $this->determineSourcePath();
 
-        // Migration
-        if (CLI::prompt('Publish queue migration?', ['y', 'n']) == 'y')
-        {
-            $this->publishMigration();
-        }
-
         // Config
         if (CLI::prompt('Publish Config file?', ['y', 'n']) == 'y')
         {
             $this->publishConfig();
+        }
+        
+        // Migration
+        if (CLI::prompt('Publish queue migration?', ['y', 'n']) == 'y')
+        {
+            $this->publishMigration();
         }
 
 
