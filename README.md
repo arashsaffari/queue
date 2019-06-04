@@ -58,7 +58,7 @@ finally go to config file and edit that
 
 ## Use it
 
-### 1. with Codeigniter persistor
+### 1. Codeigniter Persistor
 
 in queue config file you must enter codeigniter as connection:
 ```php 
@@ -74,7 +74,7 @@ php spark migrate:latest
 ```
 ---
 
-### 2. with PDO
+### 2. PDO Persistor
 
 in queue config file you must enter codeigniter as connection:
 ```php 
@@ -99,7 +99,7 @@ Create a table with the following SQL code:
 ```
 ---
 
-## To add a task in queue
+## Add a task in queue
 
 ```php
 ...
@@ -129,7 +129,7 @@ $queue->addTask($task);
 
 ---
 
-## To run the worker
+## Run the worker
 
 ```shell
 php spark queue:work
