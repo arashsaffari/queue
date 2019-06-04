@@ -12,7 +12,7 @@ class Queue extends BaseConfig
     //--------------------------------------------------------------------
     // 
     //
-    public $queueConnection = 'pdo';
+    public $queueConnection = 'codeigniter';
 
 
     public $codeigniter = [
@@ -26,19 +26,20 @@ class Queue extends BaseConfig
 	public $pdo = [
 		'persistor'			=> 'CodeigniterExt\Queue\Persistor\Pdo\Pdo',
 		'params'    		=> [
-			'dsn'       => 'mysql:host=localhost;dbname=ci4_modules;charset=utf8',
-			'username'  => 'root',
-			'password'  => 'root',
-			'table_name'=> 'queue_tasks1'
+			'dsn'       => 'mysql:host=localhost;dbname=___YOUR_DB___;charset=utf8',
+			'username'  => '',
+			'password'  => '',
+			'table_name'=> 'queue_tasks'
 		],
 	];
 
-	public $redis = [
-		'persistor'			=> 'CodeigniterExt\Queue\Persistor\Pdo\Pdo',
-		'params'    		=> [
-			'host'  => '127.0.0.1',
-			'port'  => 6379
-		],
-	];
+	//TODO: will be added
+	// public $redis = [
+	// 	'persistor'			=> 'CodeigniterExt\Queue\Persistor\Pdo\Pdo',
+	// 	'params'    		=> [
+	// 		'host'  => '127.0.0.1',
+	// 		'port'  => 6379
+	// 	],
+	// ];
 
 }

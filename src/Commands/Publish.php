@@ -57,7 +57,7 @@ class Publish extends BaseCommand
         $path = "{$this->sourcePath}/Config/Queue.php";
         $content = file_get_contents($path);
         $appNamespace = APP_NAMESPACE;
-        $content = str_replace('namespace CodeigniterExt\Queue', "namespace {$appNamespace}\Config", $content);
+        $content = str_replace('namespace CodeigniterExt\Queue\Config', "namespace {$appNamespace}\Config", $content);
         $this->writeFile("Config/Queue.php", $content);
     }
 
