@@ -60,6 +60,11 @@ finally go to config file and edit that
 
 ### 1. with Codeigniter persistor
 
+in queue config file you must enter codeigniter as connection:
+```php 
+$queueConnection = 'codeigniter';
+```
+
 Now use the following commands from the command prompt to migrate queue table
 
 >**NOTE: You must have previously entered the command `php spark queue: publish` and type in Publish queue migration: `y`**
@@ -67,3 +72,67 @@ Now use the following commands from the command prompt to migrate queue table
 ```shell
 php spark migrate:latest
 ```
+---
+
+### 2. with PDO
+
+in queue config file you must enter codeigniter as connection:
+```php 
+$queueConnection = 'pdo';
+```
+
+Create a table with the following SQL code:
+
+```SQL
+ CREATE TABLE IF NOT EXISTS `queue_tasks` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `method_name` VARCHAR(255) NULL,
+    `data` TEXT NULL,
+    `priority` TINYINT NOT NULL,
+    `unique_id` VARCHAR(32) NULL,
+    `created_at` DATETIME NOT NULL,
+    `is_taken` TINYINT(1) NOT NULL DEFAULT 0,
+    `error` TINYINT(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`))
+  ENGINE = InnoDB;
+```
+---
+
+## To add a task in queue
+
+```php
+...
+use CodeigniterExt\Queue\Queue;
+use CodeigniterExt\Queue\Task;
+...
+
+$queue = new Queue();
+
+$task = new Task;
+
+$task
+    ->setName('App/Controllers/SendMail')
+    ->setData(
+        array(
+            'to'        => 'example@domain.com',
+            'from'      => 'your@email.com',
+            'subject'   => 'Hi!',
+            'text'      => 'It is your faithful Queue!'
+        )
+    )
+    ->setPriority(Task::PRIORITY_NORMAL);
+
+// Queue it
+$queue->addTask($task);
+```
+
+---
+
+## To run the worker
+
+```shell
+php spark queue:work
+```
+
+>To keep the queue:work process running permanently in the background, you should use a process monitor such as [Supervisor](http://supervisord.org) to ensure that the queue worker does not stop running.
