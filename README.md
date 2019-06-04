@@ -45,12 +45,25 @@ $ php spark queue:work
 
 ## Configuration
 Run the following command from the command prompt, and it will copy queue migration (`20190526184519_queue_tasks.php`) and config (`Queue.php`) into your application
-**NOTE:If you do not want to use a codeigniter persistor, simply confirm the Publish Config file and type in Publish queue migration: `n`**
-## 1. install this package
-php spark migrate:latest
+
+```shell
+php spark queue:publish
+```
+
+>**NOTE:If you do not want to use a codeigniter persistor, simply confirm the Publish Config file and type in Publish queue migration: `n`**
+
+finally go to config file and edit that
+
 ---
 
-## Configuration
-
-
 ## Use it
+
+### 1. with Codeigniter persistor
+
+Now use the following commands from the command prompt to migrate queue table
+
+>**NOTE:You must have previously entered the command `php spark queue: publish` and type in Publish queue migration: `y`**
+
+```shell
+php spark migrate:latest
+```
