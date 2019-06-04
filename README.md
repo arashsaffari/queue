@@ -50,7 +50,7 @@ Run the following command from the command prompt, and it will copy queue migrat
 php spark queue:publish
 ```
 
->**NOTE:If you do not want to use a codeigniter persistor, simply confirm the Publish Config file and type in Publish queue migration: `n`**
+>**NOTE: If you do not want to use a codeigniter persistor, simply confirm the Publish Config file and type in Publish queue migration: `n`**
 
 finally go to config file and edit that
 
@@ -62,7 +62,7 @@ finally go to config file and edit that
 
 Now use the following commands from the command prompt to migrate queue table
 
->**NOTE:You must have previously entered the command `php spark queue: publish` and type in Publish queue migration: `y`**
+>**NOTE: You must have previously entered the command `php spark queue: publish` and type in Publish queue migration: `y`**
 
 ```shell
 php spark migrate:latest
