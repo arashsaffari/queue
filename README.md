@@ -136,3 +136,5 @@ php spark queue:work
 ```
 
 >To keep the queue:work process running permanently in the background, you should use a process monitor such as [Supervisor](http://supervisord.org) to ensure that the queue worker does not stop running.
+
+inspiration from [anorgan/QuTee](https://github.com/anorgan/QuTee) (a PHP Background Jobs (Tasks) Manager)
