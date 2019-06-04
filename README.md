@@ -76,7 +76,7 @@ php spark migrate:latest
 
 ### 2. PDO Persistor
 
-in queue config file you must enter codeigniter as connection:
+in queue config file you must enter PDO as connection:
 ```php 
 $queueConnection = 'pdo';
 ```
