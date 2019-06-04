@@ -10,13 +10,13 @@ Persistors:
     * ODBC
     * ....
 2. PDO (Does not use a codeigniter modeling system and is self-contained)
-3. Redis //TODO: will be added
+3. Redis `//TODO: will be added`
 
 **I look forward to every help, further development and recommendation**
 
 # Installing
 
-## 1. install this package
+## install this package
 
 ```shell
 $ composer require codeigniterextqueue
@@ -41,8 +41,12 @@ $ php spark queue:retry
 $ php spark queue:run
 $ php spark queue:work
 ```
+---
 
-## 2. install this package
+## Configuration
+Run the following command from the command prompt, and it will copy queue migration (`20190526184519_queue_tasks.php`) and config (`Queue.php`) into your application
+**NOTE:If you do not want to use a codeigniter persistor, simply confirm the Publish Config file and type in Publish queue migration: `n`**
+## 1. install this package
 php spark migrate:latest
 ---
 
