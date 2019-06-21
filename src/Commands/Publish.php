@@ -43,10 +43,10 @@ class Publish extends BaseCommand
 
     protected function publishMigration()
     {
-        $map = directory_map($this->sourcePath . '/Database/Migrations');
+        $map = directory_map($this->sourcePath . '/_Database/Migrations');
         foreach ($map as $file)
         {
-            $content = file_get_contents("{$this->sourcePath}/Database/Migrations/{$file}");
+            $content = file_get_contents("{$this->sourcePath}/_Database/Migrations/{$file}");
             $this->writeFile("Database/Migrations/{$file}", $content);
         }
         CLI::write('Remember to run `spark migrate:latest` to migrate the database.', 'blue');
