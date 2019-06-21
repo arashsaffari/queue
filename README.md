@@ -46,6 +46,15 @@ $ php spark queue:work
 ## Configuration
 Run the following command from the command prompt, and it will copy queue migration (`20190526184519_queue_tasks.php`) and config (`Queue.php`) into your application
 
+Then in your Config/Modules.php, change this :
+
+```php 
+public $enabled = true;
+public $discoverInComposer = true;
+```
+
+Then
+
 ```shell
 php spark queue:publish
 ```
