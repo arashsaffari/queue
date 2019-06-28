@@ -50,7 +50,7 @@ class Codeigniter implements PersistorInterface
 		$this->_TaskModel 	= new TaskModel($options);
 		$this->_TaskEntity 	= new  $this->_TaskModel->returnType;
 		
-		$this->_testConnection();
+		$this->_testConnection($options);
 		
 		$this->_options = $options;
 
@@ -414,11 +414,11 @@ class Codeigniter implements PersistorInterface
 	 *
 	 * @throws \CodeigniterExt\Queue\Persistor\Codeigniter\DBConnecException
 	 */
-	protected function _testConnection()
+	protected function _testConnection(array $options)
 	{
 		try {
 
-			$db = \Config\Database::connect();
+			$db = \Config\Database::connect($options['db_group'],false);
 			$db->reconnect();
 
 		}
