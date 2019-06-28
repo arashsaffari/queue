@@ -78,6 +78,8 @@ class Codeigniter implements PersistorInterface
 			"priority"      => $task->getPriority(),
 			"unique_id"     => $task->isUnique() ? $task->getUniqueId() : null,
 			"created_at"    => date('Y-m-d H:i:s'),
+			"is_taken"		=> 0,
+			"error"			=> 0,
 		]);
 
 		if (! $this->_TaskModel->save($TaskEntity) ){
