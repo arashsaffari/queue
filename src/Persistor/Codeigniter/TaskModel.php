@@ -15,7 +15,7 @@ class TaskModel extends Model
     
     protected $table;
     
-    protected $returnType = 'CodeigniterExt\Queue\Persistor\codeigniter\TaskEntity';
+    protected $returnType = 'CodeigniterExt\Queue\Persistor\Codeigniter\TaskEntity';
 
 
     protected $primaryKey = 'id';

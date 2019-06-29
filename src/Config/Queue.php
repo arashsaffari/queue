@@ -16,7 +16,7 @@ class Queue extends BaseConfig
 
 
     public $codeigniter = [
-		'persistor'			=> 'CodeigniterExt\Queue\Persistor\codeigniter\Codeigniter',
+		'persistor'			=> 'CodeigniterExt\Queue\Persistor\Codeigniter\Codeigniter',
 		'params'    		=> [
 			'db_group'		=> false,
 			'table_name'	=> 'queue_tasks',
